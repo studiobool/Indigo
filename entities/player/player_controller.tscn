@@ -1,0 +1,259 @@
+[gd_scene load_steps=9 format=3 uid="uid://185ki1v288ao"]
+
+[ext_resource type="Script" path="res://entities/player/scripts/player_controller.gd" id="1_my0co"]
+[ext_resource type="AudioStream" uid="uid://bswq5ifcck45k" path="res://placeholder/Footsteps/Stone/step_1.wav" id="2_i5r8j"]
+[ext_resource type="AudioStream" uid="uid://c44cfvjtv8lpv" path="res://placeholder/Footsteps/Stone/step_2.wav" id="3_avmfb"]
+[ext_resource type="AudioStream" uid="uid://bfmtp3yrkrawm" path="res://placeholder/Footsteps/Stone/step_3.wav" id="4_3vuqm"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_e2c1y"]
+margin = 0.01
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_upyyl"]
+margin = 0.01
+height = 1.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_fto3j"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dooai"]
+albedo_color = Color(0.25, 0.25, 0.25, 1)
+
+[node name="Player" type="CharacterBody3D"]
+script = ExtResource("1_my0co")
+footstep_sounds = Array[AudioStreamWAV]([ExtResource("2_i5r8j"), ExtResource("3_avmfb"), ExtResource("4_3vuqm")])
+
+[node name="Normal" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_e2c1y")
+
+[node name="Crouch" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+shape = SubResource("CapsuleShape3D_upyyl")
+
+[node name="Marker" type="Node3D" parent="."]
+
+[node name="Normal" type="Marker3D" parent="Marker"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="Crouch" type="Marker3D" parent="Marker"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="CrouchDetect" type="RayCast3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+target_position = Vector3(0, 0.5, 0)
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+layers = 4
+size = Vector3(1, 2, 1)
+
+[node name="Head" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="Bob" type="Node3D" parent="Head"]
+
+[node name="Camera" type="Camera3D" parent="Head/Bob"]
+cull_mask = 3
+fov = 80.0
+
+[node name="InteractRay" type="RayCast3D" parent="Head/Bob/Camera"]
+target_position = Vector3(0, 0, -1)
+hit_back_faces = false
+collide_with_areas = true
+
+[node name="GrabHoldRay" type="RayCast3D" parent="Head/Bob/Camera"]
+target_position = Vector3(0, 0, -3.75)
+hit_back_faces = false
+
+[node name="Joint" type="Generic6DOFJoint3D" parent="Head/Bob/Camera"]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 0, 0)
+node_a = NodePath("../StaticBody")
+
+[node name="StaticBody" type="StaticBody3D" parent="Head/Bob/Camera"]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 0, 0)
+
+[node name="PhysArm" type="SpringArm3D" parent="Head/Bob/Camera"]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 0, 0)
+collision_mask = 0
+spring_length = 2.5
+
+[node name="Marker" type="Marker3D" parent="Head/Bob/Camera/PhysArm"]
+
+[node name="RigidBody3D" type="RigidBody3D" parent="Head/Bob/Camera/PhysArm/Marker"]
+collision_layer = 0
+collision_mask = 0
+
+[node name="MeshDebug" type="MeshInstance3D" parent="Head/Bob/Camera/PhysArm/Marker/RigidBody3D"]
+visible = false
+mesh = SubResource("BoxMesh_fto3j")
+
+[node name="Hand" type="Node3D" parent="Head"]
+
+[node name="Holder" type="Node3D" parent="Head/Hand"]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Head/Hand/Holder"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, -0.5, -0.5)
+layers = 2
+size = Vector3(0.375, 0.375, 1)
+material = SubResource("StandardMaterial3D_dooai")
+
+[node name="Pivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.991445, 0.130526, 0, -0.130526, 0.991445, 0, 1.25, 0)
+
+[node name="Arm" type="SpringArm3D" parent="Pivot"]
+spring_length = 2.5
+margin = 0.5
+
+[node name="Camera" type="Camera3D" parent="Pivot/Arm"]
+cull_mask = 5
+current = true
+fov = 80.0
+
+[node name="Indicators" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="InteractIndicator" type="Control" parent="Indicators"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="Label" type="Label" parent="Indicators/InteractIndicator"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -128.0
+offset_top = -16.0
+offset_bottom = 16.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "[ E ]  Activate"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ColorRect" type="ColorRect" parent="Indicators/InteractIndicator/Label"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.498039)
+
+[node name="GrabIndicator" type="Control" parent="Indicators"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="Label" type="Label" parent="Indicators/GrabIndicator"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -128.0
+offset_top = -16.0
+offset_bottom = 16.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "[ E ]  Grab"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ColorRect" type="ColorRect" parent="Indicators/GrabIndicator/Label"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.498039)
+
+[node name="HoldIndicator" type="Control" parent="Indicators"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="Label" type="Label" parent="Indicators/HoldIndicator"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -128.0
+offset_top = -16.0
+offset_bottom = 16.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "[ E ]  Hold
+"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ColorRect" type="ColorRect" parent="Indicators/HoldIndicator/Label"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.498039)
+
+[node name="Label" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="Label2" type="Label" parent="."]
+offset_top = 24.0
+offset_right = 40.0
+offset_bottom = 47.0
+
+[node name="Footstep" type="AudioStreamPlayer3D" parent="."]
+max_polyphony = 8
+
+[node name="ColorRect" type="ColorRect" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
